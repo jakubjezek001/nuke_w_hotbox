@@ -7,7 +7,7 @@ You have the option to create buttons that either show up when specific node (co
 
 The hotbox while having a Merge node selected:
 
-[merge](http://www.nukepedia.com/images/users/WouterGilsing/introHotbox.png)
+![merge](http://www.nukepedia.com/images/users/WouterGilsing/introHotbox.png)
 
 For me it changed the way I interact with Nuke completely and it sped up my workflow quite a bit. The ability to move any action to a button that appears near your cursor saves you a trip to the other side of your screen and back pretty often.
 
