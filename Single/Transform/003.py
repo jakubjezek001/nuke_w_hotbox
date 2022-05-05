@@ -69,22 +69,16 @@ def start():
             list_of_nodes = [n]
             # we count how many parents the node has
             while has_parents:
-                p = n.input(0)
-                if p:
-                    if p['selected'].value():
-                        n = p
-                        number_of_nodes += 1
-                        list_of_nodes.append(n)
-                    else:
-                        has_parents = False
+                if (p := n.input(0)) and p['selected'].value():
+                    n = p
+                    number_of_nodes += 1
+                    list_of_nodes.append(n)
                 else:
                     has_parents = False
-    
-                    # the node with the biggest number of parents is our last node
             if number_of_nodes > nodes_in_list:
                 nodes_in_list = number_of_nodes
                 sorted_list = list_of_nodes
-    
+
         # We want our first node first though, so we reverse the list
         sorted_list.reverse()
         return sorted_list
@@ -138,7 +132,7 @@ def start():
     
     def get_matrix_at_frame(node, frame):
         matrix = None
-        if node.Class() == 'Transform' or node.Class() == 'Tracker4':
+        if node.Class() in ['Transform', 'Tracker4']:
             k = node.knob('matrix')
             context = nuke.OutputContext()
             context.setFrame(frame)
@@ -173,12 +167,12 @@ def start():
             for i in xrange(len(values)):
                 extra_matrix[i] = values[i]
             extra_matrix.transpose()
-    
+
             matrix = extra_matrix * (to_matrix * from_matrix.inverse())
-    
+
             if node['invert'].getValueAt(frame):
                 matrix = matrix.inverse()
-    
+
         return matrix
     
     
@@ -313,7 +307,7 @@ def start():
         exec_thread.start()
         #exec_thread.join()
 
-for i in nuke.selectedNodes():
+for _ in nuke.selectedNodes():
     start()
     break
 

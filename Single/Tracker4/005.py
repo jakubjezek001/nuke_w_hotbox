@@ -78,5 +78,5 @@ def TrackerToRoto() :
         frame = frame+1
 
 
-for i in nuke.selectedNodes():
+for _ in nuke.selectedNodes():
     TrackerToRoto()

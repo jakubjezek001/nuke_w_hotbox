@@ -16,7 +16,7 @@ def getStrokes(layer):
     for element in layer:
         if isinstance(element, nuke.rotopaint.Layer):
             getStrokes(element)
-        elif isinstance(element, nuke.rotopaint.Stroke) or isinstance(element, nuke.rotopaint.Shape):
+        elif isinstance(element, (nuke.rotopaint.Stroke, nuke.rotopaint.Shape)):
             strokes.append(element)
     return strokes
 

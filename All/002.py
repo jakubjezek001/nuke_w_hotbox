@@ -8,7 +8,7 @@
 
 for i in nuke.selectedNodes():
     maskKnob = i.knob('invert_mask')
-    if maskKnob == None:
+    if maskKnob is None:
         maskKnob = i.knob('invertMask')
     if maskKnob != None:
         maskKnob.setValue(1-maskKnob.value())

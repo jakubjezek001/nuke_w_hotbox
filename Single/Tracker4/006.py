@@ -24,18 +24,12 @@ def sort_nodes(node_list):
 		list_of_nodes = [n]
 		# we count how many parents the node has
 		while has_parents:
-			p = n.input(0)
-			if p:
-				if p['selected'].value():
-					n = p
-					number_of_nodes += 1
-					list_of_nodes.append(n)
-				else:
-					has_parents = False
+			if (p := n.input(0)) and p['selected'].value():
+				n = p
+				number_of_nodes += 1
+				list_of_nodes.append(n)
 			else:
 				has_parents = False
-
-				# the node with the biggest number of parents is our last node
 		if number_of_nodes > nodes_in_list:
 			nodes_in_list = number_of_nodes
 			sorted_list = list_of_nodes
@@ -93,7 +87,7 @@ def matrix_to_cornerpin(matrix, cornerpin_node, frame, width, height):
 
 def get_matrix_at_frame(node, frame):
 	matrix = None
-	if node.Class() == 'Transform' or node.Class() == 'Tracker4':
+	if node.Class() in ['Transform', 'Tracker4']:
 		k = node.knob('matrix')
 		context = nuke.OutputContext()
 		context.setFrame(frame)
@@ -273,9 +267,8 @@ class MergeTransformsPanel(nukescripts.PythonPanel):
 
 
 nodes = nuke.selectedNodes()
-valid_nodes = check_only_classes(nodes, ['Transform', 'CornerPin2D', 'Tracker4'])
-
-if valid_nodes:
+if valid_nodes := check_only_classes(nodes,
+                                     ['Transform', 'CornerPin2D', 'Tracker4']):
 	transform_list = sort_nodes(nodes)
 
 

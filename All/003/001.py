@@ -6,4 +6,6 @@
 #
 #----------------------------------------------------------------------------------------------------------
 
-nuke.message('%s / %s nodes selected'%(len(nuke.selectedNodes()),len(nuke.allNodes())))
+nuke.message(
+    f'{len(nuke.selectedNodes())} / {len(nuke.allNodes())} nodes selected'
+)

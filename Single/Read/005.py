@@ -11,10 +11,7 @@ import nukescripts
 myKnobPanel = nuke.Panel('Set Version')
 myKnobPanel.addSingleLineInput('Version','')
 
-#show the panel
-panel = myKnobPanel.show()
-
-if panel:
+if panel := myKnobPanel.show():
     newVersion = myKnobPanel.value('Version')
 
     for i in nuke.selectedNodes():

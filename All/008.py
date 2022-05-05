@@ -27,11 +27,10 @@ for i in nuke.selectedNodes():
 
 #select all nodes
 for i in nuke.allNodes():
-    nodeClass = i.Class() 
+    nodeClass = i.Class()
     if nodeClass == 'Group':
         if getGroupName(i.name()) in classesList[1]:
             i.knob('selected').setValue(True)
-    else:
-        if nodeClass in classesList[0]:
-            i.knob('selected').setValue(True)
+    elif nodeClass in classesList[0]:
+        i.knob('selected').setValue(True)
 

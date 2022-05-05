@@ -38,6 +38,6 @@ def start():
             return 0
 
 
-for i in nuke.selectedNodes():
+for _ in nuke.selectedNodes():
     start()
     break

@@ -8,4 +8,4 @@
 
 for i in nuke.selectedNodes():
     for index, axis in enumerate(['x','y','r','t']):
-        i.knob('ROI').setExpression('input.bbox.%s'%axis,index)
+        i.knob('ROI').setExpression(f'input.bbox.{axis}', index)

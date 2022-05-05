@@ -92,7 +92,7 @@ class hotbox(QtGui.QWidget):
 
             if len(self.selection) > 1:
 
-                if len(list(set([i.Class() for i in nuke.selectedNodes()]))) == 1:
+                if len(list({i.Class() for i in nuke.selectedNodes()})) == 1:
                     self.mode = 'Single'
                 else:
                     self.mode = 'Multiple'
@@ -104,7 +104,10 @@ class hotbox(QtGui.QWidget):
             centerLayout = QtGui.QHBoxLayout()
 
             centerLayout.addStretch()
-            centerLayout.addWidget(hotboxButton('Reveal in %s'%getFileBrowser(),'revealInBrowser()'))
+            centerLayout.addWidget(
+                hotboxButton(f'Reveal in {getFileBrowser()}', 'revealInBrowser()')
+            )
+
             centerLayout.addSpacing(25)
             centerLayout.addWidget(hotboxCenter())
             centerLayout.addSpacing(25)
@@ -115,13 +118,14 @@ class hotbox(QtGui.QWidget):
             self.bottomLayout = nodeButtons('All')
             spacing = 12
 
-        #--------------------------------------------------------------------------------------------------
-        #submenu
-        #--------------------------------------------------------------------------------------------------
-
         else:
 
-            allItems = [path + '/' + i for i in sorted(os.listdir(path)) if i[0] not in ['.','_']]
+            allItems = [
+                f'{path}/{i}'
+                for i in sorted(os.listdir(path))
+                if i[0] not in ['.', '_']
+            ]
+
 
             centerItems = allItems[:2]
 
@@ -215,13 +219,12 @@ class hotbox(QtGui.QWidget):
             return True
 
     def keyPressEvent(self, event):
-        if event.text() == shortcut:
-            if event.isAutoRepeat():
-                return False
-            if self.triggerMode:
-                self.closeHotbox()
-        else:
+        if event.text() != shortcut:
             return False
+        if event.isAutoRepeat():
+            return False
+        if self.triggerMode:
+            self.closeHotbox()
 
     def eventFilter(self, object, event):
         if event.type() in [QtCore.QEvent.WindowDeactivate,QtCore.QEvent.FocusOut]:
@@ -253,27 +256,24 @@ class nodeButtons(QtGui.QVBoxLayout):
             if 'top' in mode.lower():
                 mirrored = False
 
-        #--------------------------------------------------------------------------------------------------
-        #main hotbox
-        #--------------------------------------------------------------------------------------------------
-
         else:
 
             self.path = preferencesNode.knob('hotboxLocation').value().replace('\\','/')
             if self.path[-1] != '/':
-                self.path = self.path + '/'
+                self.path = f'{self.path}/'
 
             self.allRepositories = list(set([self.path]+[i[1] for i in extraRepositories]))
 
             self.rowMaxAmount = int(preferencesNode.knob('hotboxRowAmountAll').value())
 
             self.folderList = []
-            
-            
+
+
             if mode == 'All':
 
-                for repository in self.allRepositories:
-                    self.folderList.append(repository + mode + '/')
+                self.folderList.extend(
+                    repository + mode + '/' for repository in self.allRepositories
+                )
 
             else:
                 mirrored = False
@@ -286,23 +286,27 @@ class nodeButtons(QtGui.QVBoxLayout):
 
                     else:
                         nodeClass = selectedNodes[0].Class()
-                    
-                    for repository in self.allRepositories:
-                        self.folderList.append(repository + mode + '/' + nodeClass)
-                    
+
+                    self.folderList.extend(
+                        repository + mode + '/' + nodeClass
+                        for repository in self.allRepositories
+                    )
+
                     #check if group, if so take the name of the group, as well as the class
 
                     if nodeClass == 'Group':
                         nodeClass = selectedNodes[0].name()
                         while nodeClass[-1] in [str(i) for i in range(10)]:
                             nodeClass = nodeClass[:-1]
-                        for repository in self.allRepositories:
-                            self.folderList.append(repository + mode + '/' + nodeClass)
+                        self.folderList.extend(
+                            repository + mode + '/' + nodeClass
+                            for repository in self.allRepositories
+                        )
 
                 else:
                     #scan the 'multiple' folder for folders containing all the currently selected classes.
-                    nodeClasses = sorted(list(set([i.Class() for i in selectedNodes])))
-                    
+                    nodeClasses = sorted(list({i.Class() for i in selectedNodes}))
+
                     for repository in self.allRepositories:
                         try:
                             for i in sorted(os.listdir(repository + mode)):
@@ -312,14 +316,14 @@ class nodeButtons(QtGui.QVBoxLayout):
                                         self.folderList.append(repository + mode + '/' + i)
                         except:
                             pass
-                        
+
             allItems = []
 
             for folder in list(set(self.folderList)):
                 #check if path exists
                 if os.path.exists(folder):
                     for i in sorted(os.listdir(folder)):
-                        if i[0] not in ['.','_'] and len(i) in [3,6]:
+                        if i[0] not in ['.', '_'] and len(i) in {3, 6}:
                             if folder[-1] != '/':
                                 folder += '/'
                             allItems.append(folder + i)
@@ -332,13 +336,14 @@ class nodeButtons(QtGui.QVBoxLayout):
 
         for i in range(len(allItems)):
             currentItem = allItems[i]
-            if preferencesNode.knob('hotboxButtonSpawnMode').value():
-                if len(row) %2:
-                    row.append(currentItem)
-                else:
-                    row.insert(0,currentItem)
-            else:
+            if (
+                preferencesNode.knob('hotboxButtonSpawnMode').value()
+                and len(row) % 2
+                or not preferencesNode.knob('hotboxButtonSpawnMode').value()
+            ):
                 row.append(currentItem)
+            else:
+                row.insert(0,currentItem)
             #when a row reaches its full capacity, add the row to the allRows list
             #and start a new one. Increase rowcapacity to get a triangular shape
             if len(row) == self.rowMaxAmount:
@@ -350,11 +355,7 @@ class nodeButtons(QtGui.QVBoxLayout):
         if len(row) != 0:
             allRows.append(row)
 
-        if mirrored:
-            rows =  allRows
-        else:
-            rows =  allRows[::-1]
-
+        rows = allRows if mirrored else allRows[::-1]
         #nodeHotboxLayout
         for row in rows:
             self.rowLayout = QtGui.QHBoxLayout()
@@ -414,12 +415,12 @@ class hotboxCenter(QtGui.QLabel):
             height = 60
 
 
-            if (len(set([i.Class() for i in selectedNodes]))) > 1:
+            if len({i.Class() for i in selectedNodes}) > 1:
                 name = 'Selection'
 
         else:
 
-            name = open(name + '/_name.json').read()
+            name = open(f'{name}/_name.json').read()
             nodeColor = getSelectionColor()
 
             width = 105
@@ -492,7 +493,7 @@ class hotboxButton(QtGui.QLabel):
         self.borderColor = '#000000'
 
         #set the border color to grey for buttons from an additional repository
-        for index,i in enumerate(extraRepositories):
+        for i in extraRepositories:
             if name.startswith(i[1]):
                 self.borderColor = '#959595'
                 break
@@ -500,38 +501,26 @@ class hotboxButton(QtGui.QLabel):
         if function != None:
             self.function = function
 
+        elif os.path.isdir(self.filePath):
+            self.menuButton = True
+            name = open(f'{self.filePath}/_name.json').read()
+            self.function = 'showHotboxSubMenu("%s","%s")'%(self.filePath,name)
+            self.bgColor = '#333333'
+
         else:
 
-            #----------------------------------------------------------------------------------------------
-            #Button linked to folder
-            #----------------------------------------------------------------------------------------------
+            self.openFile = open(name).readlines()
+            nameTag = '# NAME: '
 
-            if os.path.isdir(self.filePath):
-                self.menuButton = True
-                name = open(self.filePath+'/_name.json').read()
-                self.function = 'showHotboxSubMenu("%s","%s")'%(self.filePath,name)
-                self.bgColor = '#333333'
+            for index, line in enumerate(self.openFile):
 
-            #----------------------------------------------------------------------------------------------
-            #Button linked to file
-            #----------------------------------------------------------------------------------------------
+                if line.startswith(nameTag):
 
-            else:
+                    name = line.split(nameTag)[-1].replace('\n','')
 
-                self.openFile = open(name).readlines()
-                nameTag = '# NAME: '
-
-                for index, line in enumerate(self.openFile):
-
-                    if line.startswith(nameTag):
-
-                        name = line.split(nameTag)[-1].replace('\n','')
-
-                    if not line.startswith('#'):
-                        self.function = ''.join(self.openFile[index:])
-                        break
-
-            #----------------------------------------------------------------------------------------------
+                if not line.startswith('#'):
+                    self.function = ''.join(self.openFile[index:])
+                    break
 
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setMouseTracking(True)
@@ -691,10 +680,8 @@ def savePreferencesToFile():
 
     preferencesCode = 'Preferences {\n inputs 0\n name Preferences%s\n}' %customPrefences
 
-    # write to file
-    openPreferencesFile = open( preferencesFile , 'w' )
-    openPreferencesFile.write( preferencesCode )
-    openPreferencesFile.close()
+    with open( preferencesFile , 'w' ) as openPreferencesFile:
+        openPreferencesFile.write( preferencesCode )
 
 def deletePreferences():
     '''
@@ -722,7 +709,7 @@ def addPreferences():
     '''
     
     homeFolder = os.getenv('HOME').replace('\\','/') + '/.nuke'
-    
+
     addToPreferences(nuke.Tab_Knob('hotboxLabel','W_hotbox'))
     addToPreferences(nuke.Text_Knob('hotboxGeneralLabel','<b>General</b>'))
 
@@ -740,11 +727,11 @@ def addPreferences():
     locationKnobAdded = addToPreferences(locationKnob, tooltip)
 
     if locationKnobAdded != None:
-        locationKnob.setValue(homeFolder + '/W_hotbox')
+        locationKnob.setValue(f'{homeFolder}/W_hotbox')
 
     #icons knob
     iconLocationKnob = nuke.File_Knob('hotboxIconLocation','Icons location')
-    iconLocationKnob.setValue(homeFolder +'/icons/W_hotbox')
+    iconLocationKnob.setValue(f'{homeFolder}/icons/W_hotbox')
 
     tooltip = "The folder on disk the where the Hotbox related icons are stored. Make sure this path links to the folder containing the PNG files."
     addToPreferences(iconLocationKnob, tooltip)
@@ -889,9 +876,10 @@ def addPreferences():
 
     #hide the iconLocation knob if environment varible called 'W_HOTBOX_HIDE_ICON_LOC' is set to 'true' or '1'
     preferencesNode.knob('hotboxIconLocation').setVisible(True)
-    if 'W_HOTBOX_HIDE_ICON_LOC' in os.environ.keys():
-        if os.environ['W_HOTBOX_HIDE_ICON_LOC'].lower() in ['true','1']:
-            preferencesNode.knob('hotboxIconLocation').setVisible(False)
+    if 'W_HOTBOX_HIDE_ICON_LOC' in os.environ.keys() and os.environ[
+        'W_HOTBOX_HIDE_ICON_LOC'
+    ].lower() in ['true', '1']:
+        preferencesNode.knob('hotboxIconLocation').setVisible(False)
 
     savePreferencesToFile()
 
@@ -945,7 +933,7 @@ def updatePreferences():
             addPreferences()
 
             #Restore
-            for knob in currentSettings.keys():
+            for knob in currentSettings:
                 try:
                     preferencesNode.knob(knob).setValue(currentSettings[knob])
                 except:
@@ -1033,14 +1021,12 @@ def getFileBrowser():
     '''
     operatingSystem = platform.system()
 
-    if operatingSystem == "Windows":
-        fileBrowser = 'Explorer'
-    elif operatingSystem == "Darwin":
-        fileBrowser = 'Finder'
+    if operatingSystem == "Darwin":
+        return 'Finder'
+    elif operatingSystem == "Windows":
+        return 'Explorer'
     else:
-        fileBrowser = 'file browser'
-
-    return fileBrowser
+        return 'file browser'
 
 #----------------------------------------------------------------------------------------------------------
 
@@ -1049,10 +1035,14 @@ def showHotbox(force = False, resetPosition = True):
     global hotboxInstance
 
     #is launch mode is set to single tap, close the hotbox if it's open
-    if preferencesNode.knob('hotboxTriggerDropdown').getValue() and not force:
-        if hotboxInstance != None and hotboxInstance.active:
-            hotboxInstance.closeHotbox()
-            return
+    if (
+        preferencesNode.knob('hotboxTriggerDropdown').getValue()
+        and not force
+        and hotboxInstance != None
+        and hotboxInstance.active
+    ):
+        hotboxInstance.closeHotbox()
+        return
 
     if force:
         hotboxInstance.active = False
@@ -1062,14 +1052,14 @@ def showHotbox(force = False, resetPosition = True):
         global lastPosition
         lastPosition = ''
 
-    if hotboxInstance == None or not hotboxInstance.active:
+    if hotboxInstance is None or not hotboxInstance.active:
         hotboxInstance = hotbox(position = lastPosition)
         hotboxInstance.show()
 
 def showHotboxSubMenu(path, name):
     global hotboxInstance
     hotboxInstance.active = False
-    if hotboxInstance == None or not hotboxInstance.active:
+    if hotboxInstance is None or not hotboxInstance.active:
         hotboxInstance = hotbox(True, path, name)
         hotboxInstance.show()
 
@@ -1114,7 +1104,10 @@ menubar.addCommand('Edit/-', '', '')
 menubar.addCommand('Edit/W_hotbox/Open W_hotbox',showHotbox, shortcut)
 menubar.addCommand('Edit/W_hotbox/-', '', '')
 menubar.addCommand('Edit/W_hotbox/Open Hotbox Manager', 'W_hotboxManager.showHotboxManager()')
-menubar.addCommand('Edit/W_hotbox/Open in %s'%getFileBrowser(), revealInBrowser)
+menubar.addCommand(
+    f'Edit/W_hotbox/Open in {getFileBrowser()}', revealInBrowser
+)
+
 menubar.addCommand('Edit/W_hotbox/-', '', '')
 menubar.addCommand('Edit/W_hotbox/Repair', 'W_hotboxManager.repairHotbox()')
 menubar.addCommand('Edit/W_hotbox/Clear/Clear Everything', 'W_hotboxManager.clearHotboxManager()')
@@ -1153,10 +1146,14 @@ if 'W_HOTBOX_REPO_PATHS' in os.environ and 'W_HOTBOX_REPO_NAMES' in os.environ.k
 
 
 
-    if len(extraRepositories) > 0:
+    if extraRepositories:
         menubar.addCommand('Edit/W_hotbox/-', '', '')
         for i in extraRepositories:
-            menubar.addCommand('Edit/W_hotbox/Special/Open Hotbox Manager - %s'%i[0], 'W_hotboxManager.showHotboxManager(path="%s")'%i[1])
+            menubar.addCommand(
+                f'Edit/W_hotbox/Special/Open Hotbox Manager - {i[0]}',
+                'W_hotboxManager.showHotboxManager(path="%s")' % i[1],
+            )
+
 
 #----------------------------------------------------------------------------------------------------------
 

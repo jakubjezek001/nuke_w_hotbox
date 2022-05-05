@@ -124,5 +124,5 @@ def animatedCP2MTX():
      
 
 
-for i in nuke.selectedNodes():
-	animatedCP2MTX()
+for _ in nuke.selectedNodes():
+    animatedCP2MTX()

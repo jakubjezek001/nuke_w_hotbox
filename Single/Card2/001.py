@@ -6,8 +6,8 @@
 #
 #----------------------------------------------------------------------------------------------------------
 
+pivotValues = [0,0,0]
 for i in nuke.selectedNodes():
-    pivotValues = [0,0,0]
     i.knob('orientation').value()
     for index, axis in enumerate('XYZ'):
         value = 0
